@@ -4,7 +4,7 @@ using UnityEngine;
 using IO.Ably;
 using Assets.Ably.Examples.Chat;
 using UnityEngine.UI;
-
+using Network;
 
 public class ChatChannel
 {

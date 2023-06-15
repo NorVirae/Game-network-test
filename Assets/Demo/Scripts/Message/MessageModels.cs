@@ -1,6 +1,6 @@
 ﻿
 using Network;
-
+using IO.Ably.Realtime;
 
 
 public class LoginMessage : Message
@@ -18,6 +18,8 @@ public class SystemMessage : Message
 
 public class ChatMessage : Message
 {
-    public string messageID;
+    public string channelID;
+    public string clientID;
+    public string eventName;
     public object messageBody;
 }

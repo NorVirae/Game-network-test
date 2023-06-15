@@ -1,3 +1,4 @@
+using IO.Ably.Realtime;
 using QNetLib;
 using System;
 using System.Collections;
@@ -24,7 +25,9 @@ namespace Network
             messageHandler = new MessageHandler();
             message = new ChatMessage()
             {
-                messageID = "6",
+                channelID = "frank",
+                clientID = "joe",
+                eventName = "chat:message",
                 messageBody = new {colos = "hash"}
             };
         }
@@ -44,7 +47,7 @@ namespace Network
         public void PushMessageToServer(short messageId, Message message, Action<object> callback)
         {
             Debug.Log("Message going ooo");
-            messageHandler.SendMessageToServer(messageId, message, callback);
+            messageHandler.SendMessageToServer(102, message, callback);
         }
 
         public void PushMessageToServer()

@@ -4,37 +4,48 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AuthenticationHandler : MonoBehaviour
+public class AuthenticationHandler : Singleton<AuthenticationHandler>
 {
     public UserProfileCatch userProfile;
+    public PlayerManager playerManager;
+    //public GameObject playfabUILogin;
+    //public GameObject gameServerLogin;
 
-    public GameObject playfabUILogin;
-    public GameObject gameServerLogin;
 
     private string serverKey = "ServerData";
 
-    public void LoginToPlayfab() 
-    { 
-        if(string.IsNullOrEmpty(userProfile.userId))
+    public void LoginToPlayfab()
+    {
+        try
         {
-            userProfile.userId = HashtagFromId.Generate(Guid.NewGuid().ToString());
+            if(string.IsNullOrEmpty(userProfile.userId))
+            {
+                userProfile.userId = HashtagFromId.Generate(Guid.NewGuid().ToString());
+            }
+
+            PlayfabApiHander.LoginWithCustomId(userProfile.userId, (succes, data) =>
+            {
+                if(succes)
+                {
+                    GameManager.Instance.playerManager.userId = userProfile.userId;
+                    GameManager.Instance.playerManager.playfabId = data;
+
+                    GameNetworkManager.Instance.ConnectToServer("127.0.0.1", 1137);
+                    ChatConsole.Instance.ConnectChat();
+                    Debug.Log($"Login Succes!; userId:{userProfile.userId}, playfabId:{data}");
+
+                    GetPlayerServer();
+                }
+                else
+                {
+                    Debug.LogError($"Login Failed {data}");
+
+                }
+            });
+        }catch (Exception e)
+        {
+            Debug.LogError(e);
         }
-
-        PlayfabApiHander.LoginWithCustomId(userProfile.userId, (succes, data) =>
-        {
-            if(succes)
-            {
-                GameManager.Instance.playerManager.userId = userProfile.userId;
-                GameManager.Instance.playerManager.playfabId = data;
-                Debug.Log($"Login Succes!; userId:{userProfile.userId}, playfabId:{data}");
-
-                GetPlayerServer();
-            }
-            else
-            {
-                Debug.LogError("Login Failed");
-            }
-        });
     }
 
     public void LoginWithGoogle()
@@ -52,7 +63,7 @@ public class AuthenticationHandler : MonoBehaviour
                 {
                     ServerInfo info = SerializationHelper.Deserialize<ServerInfo>(data[serverKey]);
                     GameManager.Instance.playerManager.serverInfo = info;
-                    ProceedToJoinGameServer();
+                    //ProceedToJoinGameServer();
                 }
                 else
                 {
@@ -73,7 +84,7 @@ public class AuthenticationHandler : MonoBehaviour
                         if(_success)
                         {
                             GameManager.Instance.playerManager.serverInfo = info;
-                            ProceedToJoinGameServer();
+                            //ProceedToJoinGameServer();
                         }
                     });
                 }
@@ -85,11 +96,11 @@ public class AuthenticationHandler : MonoBehaviour
         }, serverKey);
     }
 
-    private void ProceedToJoinGameServer()
-    {
-        playfabUILogin.SetActive(false);
-        gameServerLogin.SetActive(true);
-    }
+   // private void ProceedToJoinGameServer()
+    //{
+      //  playfabUILogin.SetActive(false);
+      //  gameServerLogin.SetActive(true);
+    //}
 
     public void JoinGameServer()
     {

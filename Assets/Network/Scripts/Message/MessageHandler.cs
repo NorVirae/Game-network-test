@@ -36,6 +36,7 @@ namespace Network
 
         internal void SendMessageToServer(short messageId, object message, Action<object> callabck)
         {
+            Debug.Log("message ID "+ messageId);
             MessageProxy messageProxy = new()
             {
                 messageID = messageId,

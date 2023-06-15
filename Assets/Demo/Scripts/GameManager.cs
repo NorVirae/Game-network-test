@@ -18,7 +18,11 @@ public class GameManager : Network.Singleton<GameManager> , INetworkEventListene
     {
         GameNetworkManager.Instance.networkEventlistener = this;
         GameNetworkManager.Instance.ConnectToServer(playerManager.serverInfo.ip, playerManager.serverInfo.port);
+    }
 
+    public void LogPlayerIn()
+    {
+        AuthenticationHandler.Instance.LoginToPlayfab();
     }
 
     public void OnConnected()

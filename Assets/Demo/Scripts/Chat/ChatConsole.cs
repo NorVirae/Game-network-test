@@ -8,8 +8,9 @@ using System.Threading;
 using System;
 using UnityEngine.UI;
 using TMPro;
+using Network;
 
-public class ChatConsole : MonoBehaviour
+public class ChatConsole: Singleton<ChatConsole>
 {
     // Variables
     private static string _apiKey = "_vRLkA.dtMWdw:vxlwHwwbRD6t_uP8Qu0b5ouI8xd63937moEWiuQhxSo";
@@ -19,7 +20,7 @@ public class ChatConsole : MonoBehaviour
     public Button _connectButton;
     private bool _isConnected;
     private InputField _username;
-    private ChatChannel _chatchannel;
+    public ChatChannel _chatchannel;
     void Start()
     {
         InnitializeChatConsole();
@@ -97,11 +98,11 @@ public class ChatConsole : MonoBehaviour
         _connectionStatus = GameObject.Find("ConnectStatus").GetComponent<Image>();
 
         _username = GameObject.Find("UserNameField").GetComponent<InputField>();
-        _connectButton.onClick.AddListener(ConnectChat);
+        //_connectButton.onClick.AddListener(ConnectChat);
         Debug.Log(_connectionStatus);
     }
 
-    private void ConnectChat()
+    public void ConnectChat()
     {
         Debug.Log(_username);
         _clientOptions.ClientId = _username.text;
