@@ -15,3 +15,9 @@ public class SystemMessage : Message
     public string message;
 
 }
+
+public class ChatMessage : Message
+{
+    public string messageID;
+    public object messageBody;
+}

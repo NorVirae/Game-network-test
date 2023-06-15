@@ -12,12 +12,21 @@ namespace Network
         public int port = 1137;
         public Client client;
 
+        public short messageId = 102;
+        public ChatMessage message;
+
+
         public INetworkEventListener networkEventlistener;
         public MessageHandler messageHandler;
 
         private void Start()
         {
             messageHandler = new MessageHandler();
+            message = new ChatMessage()
+            {
+                messageID = "6",
+                messageBody = new {colos = "hash"}
+            };
         }
 
         public void ConnectToServer()
@@ -36,6 +45,16 @@ namespace Network
         {
             Debug.Log("Message going ooo");
             messageHandler.SendMessageToServer(messageId, message, callback);
+        }
+
+        public void PushMessageToServer()
+        {
+            PushMessageToServer(messageId, message, HandlePushMessageToServer);
+        }
+
+        private void HandlePushMessageToServer(object result)
+        {
+            Debug.Log(result);
         }
 
         public void Disconnect()
