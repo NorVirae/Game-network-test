@@ -29,8 +29,9 @@ public class AuthenticationHandler : Singleton<AuthenticationHandler>
                 {
                     GameManager.Instance.playerManager.userId = userProfile.userId;
                     GameManager.Instance.playerManager.playfabId = data;
+                    Debug.Log($"IP:{GameNetworkManager.Instance.IP}, PORT:{GameNetworkManager.Instance.port}");
 
-                    GameNetworkManager.Instance.ConnectToServer("127.0.0.1", 1137);
+                    GameNetworkManager.Instance.ConnectToServer(GameNetworkManager.Instance.IP, GameNetworkManager.Instance.port);
                     ChatConsole.Instance.ConnectChat();
                     Debug.Log($"Login Succes!; userId:{userProfile.userId}, playfabId:{data}");
 

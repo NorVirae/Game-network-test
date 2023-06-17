@@ -106,13 +106,13 @@ public class ChatConsole: Singleton<ChatConsole>
     {
         Debug.Log(_username);
         _clientOptions.ClientId = _username.text;
-        if (_isConnected)
-        {
-            _ably.Close();
-        }
-        else
-        {
+        //if (_isConnected)
+        //{
+         //   _ably.Close();
+       // }
+        //else
+        //{
             _ably.Connect();
-        }
+       // }
     }
 }
