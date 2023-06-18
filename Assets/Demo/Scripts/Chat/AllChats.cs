@@ -94,4 +94,23 @@ public class AllChats : MonoBehaviour
         });
     }
 
+
+    public void SpawnChats()
+    {
+        for (int i = 0; i < chats.Count; i++)
+        {
+            if (i / 2 == 0)
+            {
+                senderChat.UpdateChat(chats[i].msg, chats[i].senderid, chats[i].receiverid, chats[i].chatroomid);
+                Instantiate(senderChat, this.transform, false);
+            }
+            else
+            {
+                receiverChat.UpdateChat(chats[i].msg, chats[i].senderid, chats[i].receiverid, chats[i].chatroomid);
+                Instantiate(receiverChat, this.transform, false);
+            }
+
+        }
+    }
+
 }

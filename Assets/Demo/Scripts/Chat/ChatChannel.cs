@@ -26,9 +26,9 @@ public class ChatChannel
     {
         _sendButton = GameObject.Find("SendButton").GetComponent<Button>();
         _messagePayload = GameObject.Find("Payload").GetComponent<InputField>();
-        _loadMessagesBtn = GameObject.Find("LoadMessages").GetComponent<Button>();
+        //_loadMessagesBtn = GameObject.Find("LoadMessages").GetComponent<Button>();
         _sendButton.onClick.AddListener(SendMessage);
-        _loadMessagesBtn.onClick.AddListener(fetchAllMessages);
+        //_loadMessagesBtn.onClick.AddListener(fetchAllMessages);
         SubscribeToChannel();
     }
     public async void  SendMessage()

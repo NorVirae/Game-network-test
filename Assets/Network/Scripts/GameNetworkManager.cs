@@ -3,6 +3,7 @@ using QNetLib;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,8 +16,10 @@ namespace Network
         public Client client;
 
         public short chatMessageId = 102;
-        public ChatMessage message;
+        public short fetchChatRoomMessageId = 104;
+
         public InputField chatBox;
+        public AllChats allChats;
 
         public INetworkEventListener networkEventlistener;
         public MessageHandler messageHandler;
@@ -38,17 +41,18 @@ namespace Network
             client.Connect(_ip, _port);
         }
 
-        public void PushMessageToServer(short messageId, Message message, Action<object> callback)
+        public void PushMessageToServer(short messageId, MessageProxy message, Action<Datagram> callback)
         {
-            Debug.Log("Message going ooo");
             messageHandler.SendMessageToServer(messageId, message, callback);
         }
 
         //public void CreateChatRoom()
+        
 
         public void PushMessageToServer()
         {
-            ChatModel chatModel = new ChatModel { msg = chatBox.text, chatroomid = Guid.NewGuid(), senderid = Guid.NewGuid(), receiverid = Guid.NewGuid() };
+            ChatMessage message;
+            ChatModel chatModel = new ChatModel { id = Guid.NewGuid(), msg = chatBox.text, chatroomid = Guid.NewGuid(), senderid = Guid.NewGuid(), receiverid = Guid.NewGuid() };
             message = new ChatMessage
             {
                 channelID = "frank",
@@ -56,14 +60,42 @@ namespace Network
                 eventName = "chat:message",
                 messageBody = chatModel
             };
-            PushMessageToServer(chatMessageId, message, HandlePushMessageToServer);
+            PushMessageToServer(chatMessageId, message, HandleLoadChatRoom);
 
             chatBox.text = "";
         }
 
-        private void HandlePushMessageToServer(object result)
+        public void LoadChatRoom()
         {
-            Debug.Log(result);
+            ChatRoomMessage message;
+            //Debug.Log(GameManager.Instance.playerManager.playfabId + " CREATOR " + GameManager.Instance.playerManager.currentChatroomid);
+            ChatRoomModel chatRoomModel = new ChatRoomModel()
+            {
+                id = GameManager.Instance.playerManager.currentChatroomid,
+                creatorid = GameManager.Instance.playerManager.userId,
+                title = "Aisha"
+            };
+            message = new ChatRoomMessage
+            {
+                channelID = "frank",
+                clientID = "joe",
+                eventName = "chat:message",
+                messageBody = chatRoomModel
+            };
+
+            PushMessageToServer(fetchChatRoomMessageId, message, HandleLoadChatRoom);
+
+        }
+
+        private void HandleLoadChatRoom(Datagram result)
+        {
+
+            Debug.Log(JsonUtility.ToJson(result));
+            Debug.Log("RESULT FROM MSG CALL "+result.ToString() + result);
+            ChatRoomMessage data = SerializationHelper.Deserialize<ChatRoomMessage>(result.body.ToString());
+
+
+            allChats.chats = data.chats;
         }
 
         public void Disconnect()

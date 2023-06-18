@@ -31,8 +31,8 @@ public class GameManager : Network.Singleton<GameManager> , INetworkEventListene
 
 
         LoginMessage loginMessage = new LoginMessage();
-        loginMessage.playfabId = "Playboy";
-        loginMessage.userId = "userboy";
+        loginMessage.playfabId = playerManager.playfabId;
+        loginMessage.userId = playerManager.userId;
 
         GameNetworkManager.Instance.PushMessageToServer(MessageEvents.LOGIN_MESSAGE, loginMessage, (data) =>
         {
