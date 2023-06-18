@@ -21,5 +21,5 @@ public class ChatMessage : Message
     public string channelID;
     public string clientID;
     public string eventName;
-    public object messageBody;
+    public ChatModel messageBody;
 }

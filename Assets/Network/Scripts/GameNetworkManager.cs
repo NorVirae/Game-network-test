@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Network
 {
@@ -13,9 +14,9 @@ namespace Network
         public int port = 1137;
         public Client client;
 
-        public short messageId = 102;
+        public short chatMessageId = 102;
         public ChatMessage message;
-
+        public InputField chatBox;
 
         public INetworkEventListener networkEventlistener;
         public MessageHandler messageHandler;
@@ -23,13 +24,6 @@ namespace Network
         private void Start()
         {
             messageHandler = new MessageHandler();
-            message = new ChatMessage()
-            {
-                channelID = "frank",
-                clientID = "joe",
-                eventName = "chat:message",
-                messageBody = new {colos = "hash"}
-            };
         }
 
         public void ConnectToServer()
@@ -47,12 +41,24 @@ namespace Network
         public void PushMessageToServer(short messageId, Message message, Action<object> callback)
         {
             Debug.Log("Message going ooo");
-            messageHandler.SendMessageToServer(102, message, callback);
+            messageHandler.SendMessageToServer(messageId, message, callback);
         }
+
+        //public void CreateChatRoom()
 
         public void PushMessageToServer()
         {
-            PushMessageToServer(messageId, message, HandlePushMessageToServer);
+            ChatModel chatModel = new ChatModel { msg = chatBox.text, chatroomid = Guid.NewGuid(), senderid = Guid.NewGuid(), receiverid = Guid.NewGuid() };
+            message = new ChatMessage
+            {
+                channelID = "frank",
+                clientID = "joe",
+                eventName = "chat:message",
+                messageBody = chatModel
+            };
+            PushMessageToServer(chatMessageId, message, HandlePushMessageToServer);
+
+            chatBox.text = "";
         }
 
         private void HandlePushMessageToServer(object result)
