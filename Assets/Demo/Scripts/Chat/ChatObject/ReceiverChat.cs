@@ -7,11 +7,11 @@ using UnityEngine.UI;
 public class ReceiverChat : MonoBehaviour
 {
     public Text senderText;
-    private Guid senderId;
-    private Guid receiverId;
+    private string senderId;
+    private string receiverId;
     private Guid chatRoomId;
 
-    public void UpdateChat(string text, Guid sender, Guid receiver, Guid chatRoom)
+    public void UpdateChat(string text, string sender, string receiver, Guid chatRoom)
     {
         senderText.text = text;
         senderId = sender;

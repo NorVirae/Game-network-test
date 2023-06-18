@@ -30,5 +30,4 @@ public class ChatRoomMessage : MessageProxy
     public string clientID;
     public string eventName;
     public ChatRoomModel messageBody;
-    public List<ChatModel> chats;
 }

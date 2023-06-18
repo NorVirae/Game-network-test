@@ -15,20 +15,7 @@ public class AllChats : MonoBehaviour
 
         Debug.Log(chats.Count + " COUNTS");
 
-        for (int i = 0; i < chats.Count; i++)
-        {
-            if(i / 2 == 0)
-            {
-                senderChat.UpdateChat(chats[i].msg, chats[i].senderid, chats[i].receiverid, chats[i].chatroomid);
-                Instantiate(senderChat, this.transform, false);
-            }
-            else
-            {
-                receiverChat.UpdateChat(chats[i].msg, chats[i].senderid, chats[i].receiverid, chats[i].chatroomid);
-                Instantiate(receiverChat, this.transform, false);
-            }
-            
-        }
+        SpawnChats();
 
     }
 
@@ -38,8 +25,8 @@ public class AllChats : MonoBehaviour
         chats.Add(new ChatModel
         {
             id = Guid.NewGuid(),
-            senderid = Guid.NewGuid(),
-            receiverid = Guid.NewGuid(),
+            senderid = Guid.NewGuid().ToString(),
+            receiverid = Guid.NewGuid().ToString(),
             msg = "hello dear!",
             chatroomid = Guid.NewGuid()
         });
@@ -47,18 +34,8 @@ public class AllChats : MonoBehaviour
         chats.Add(new ChatModel
         {
             id = Guid.NewGuid(),
-            senderid = Guid.NewGuid(),
-            receiverid = Guid.NewGuid(),
-            msg = "hello dear!",
-            chatroomid = Guid.NewGuid()
-        });
-
-
-        chats.Add(new ChatModel
-        {
-            id = Guid.NewGuid(),
-            senderid = Guid.NewGuid(),
-            receiverid = Guid.NewGuid(),
+            senderid = Guid.NewGuid().ToString(),
+            receiverid = Guid.NewGuid().ToString(),
             msg = "hello dear!",
             chatroomid = Guid.NewGuid()
         });
@@ -67,8 +44,8 @@ public class AllChats : MonoBehaviour
         chats.Add(new ChatModel
         {
             id = Guid.NewGuid(),
-            senderid = Guid.NewGuid(),
-            receiverid = Guid.NewGuid(),
+            senderid = Guid.NewGuid().ToString(),
+            receiverid = Guid.NewGuid().ToString(),
             msg = "hello dear!",
             chatroomid = Guid.NewGuid()
         });
@@ -77,8 +54,8 @@ public class AllChats : MonoBehaviour
         chats.Add(new ChatModel
         {
             id = Guid.NewGuid(),
-            senderid = Guid.NewGuid(),
-            receiverid = Guid.NewGuid(),
+            senderid = Guid.NewGuid().ToString(),
+            receiverid = Guid.NewGuid().ToString(),
             msg = "hello dear!",
             chatroomid = Guid.NewGuid()
         });
@@ -87,16 +64,35 @@ public class AllChats : MonoBehaviour
         chats.Add(new ChatModel
         {
             id = Guid.NewGuid(),
-            senderid = Guid.NewGuid(),
-            receiverid = Guid.NewGuid(),
+            senderid = Guid.NewGuid().ToString(),
+            receiverid = Guid.NewGuid().ToString(),
+            msg = "hello dear!",
+            chatroomid = Guid.NewGuid()
+        });
+
+
+        chats.Add(new ChatModel
+        {
+            id = Guid.NewGuid(),
+            senderid = Guid.NewGuid().ToString(),
+            receiverid = Guid.NewGuid().ToString(),
             msg = "hello dear!",
             chatroomid = Guid.NewGuid()
         });
     }
 
+    public void ClearPreviousChats()
+    {
+        chats.Clear();
+        foreach (Transform child in transform)
+        {
+            Destroy(child.gameObject);
+        }
+    }
 
     public void SpawnChats()
     {
+
         for (int i = 0; i < chats.Count; i++)
         {
             if (i / 2 == 0)

@@ -1948,7 +1948,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1529284017}
         m_TargetAssemblyTypeName: Network.GameNetworkManager, Assembly-CSharp
-        m_MethodName: LoadChatRoom
+        m_MethodName: LoadPrivateChatRoom
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3694,6 +3694,7 @@ MonoBehaviour:
   chatMessageId: 102
   fetchChatRoomMessageId: 104
   chatBox: {fileID: 188731001}
+  allChats: {fileID: 1164009302}
 --- !u!4 &1529284018
 Transform:
   m_ObjectHideFlags: 0
