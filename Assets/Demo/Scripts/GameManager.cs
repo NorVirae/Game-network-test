@@ -14,6 +14,8 @@ public class GameManager : Network.Singleton<GameManager> , INetworkEventListene
     }
 
 
+
+
     public void EnterGameServer()
     {
         GameNetworkManager.Instance.networkEventlistener = this;

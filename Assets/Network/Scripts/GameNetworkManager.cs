@@ -1,4 +1,5 @@
 using IO.Ably.Realtime;
+using Network.Chat;
 using QNetLib;
 using System;
 using System.Collections;
@@ -15,18 +16,43 @@ namespace Network
         public int port = 1137;
         public Client client;
 
+        public Image connectionStatus;
+        public Text connectionText;
+
+
+        public GameObject publicChat;
+        public GameObject privateChat;
+
+        public GameObject publicChatScroll;
+        public GameObject privateChatScroll;
+
+
         public short chatMessageId = 102;
         public short fetchChatRoomMessageId = 104;
 
         public InputField chatBox;
+        public InputField publicChatBox;
+
         public AllChats allChats;
+        public AllChatsPublic allPublicChats;
 
         public INetworkEventListener networkEventlistener;
         public MessageHandler messageHandler;
 
         private void Start()
         {
+            Debug.Log("Called " + ChatManager.connectionColor);
             messageHandler = new MessageHandler();
+            ChatManager.Init("_vRLkA.dtMWdw:vxlwHwwbRD6t_uP8Qu0b5ouI8xd63937moEWiuQhxSo");
+            connectionStatus.color = ChatManager.connectionColor;
+            connectionText.text = ChatManager.connectionStateText;
+
+        }
+
+        private void Update()
+        {
+            connectionStatus.color = ChatManager.connectionColor;
+            connectionText.text = ChatManager.connectionStateText;
         }
 
         public void ConnectToServer()
@@ -63,10 +89,17 @@ namespace Network
             PushMessageToServer(chatMessageId, message, HandleLoadPrivateChatRoom);
 
             chatBox.text = "";
+
+            LoadPrivateChatRoom();
         }
 
         public void LoadPrivateChatRoom()
         {
+            privateChat.SetActive(true);
+            publicChat.SetActive(false);
+
+            privateChatScroll.SetActive(true);
+            publicChatScroll.SetActive(false);
             ChatRoomMessage message;
             //Debug.Log(GameManager.Instance.playerManager.playfabId + " CREATOR " + GameManager.Instance.playerManager.currentChatroomid);
             ChatRoomModel chatRoomModel = new ChatRoomModel()
@@ -108,13 +141,48 @@ namespace Network
             }
         }
 
-        public void LoadPublicChatRoom()
+        public async void LoadPublicChatRoom()
         {
+            privateChat.SetActive(false);
+            publicChat.SetActive(true);
 
+            privateChatScroll.SetActive(false);
+            publicChatScroll.SetActive(true);
+
+            //load messages from ably history async
+
+            ChatManager.SubscribeToChannel(GameManager.Instance.playerManager.currentChatroomid.ToString(), "chat:message");
+            List<ChatMessageResponse> messages = await ChatManager.LoadChannelMessageHistory(GameManager.Instance.playerManager.currentChatroomid.ToString(), "chat:message");
+
+            Debug.Log(messages + " MESSAGES LOAd");
+
+            //publish message to public chat room
+            allPublicChats.ClearPreviousChats();
+            if (messages.Count > 0)
+            {
+                for (int i = 0; i < messages.Count; i++)
+                {
+                    allPublicChats.chats.Add(messages[i]);
+
+                    Debug.Log("  " + messages[i].message + "   data.chats");
+                }
+                allPublicChats.SpawnChats();
+            }
         }
 
         
-
+        public void SendPublicMessage()
+        {
+            ChatManager.SubscribeToChannel(GameManager.Instance.playerManager.currentChatroomid.ToString(), "chat:message");
+            ChatManager.PublishMessage(new Chat.ChatMessage {
+                channelName =  GameManager.Instance.playerManager.currentChatroomid.ToString(),
+                eventName=  "chat:message",
+                message = publicChatBox.text 
+            });
+            Debug.Log(publicChatBox.text + " WAD MESSAGE SENTR");
+            publicChatBox.text = "";
+            LoadPublicChatRoom();
+        }
 
         //{"type":4,
        // "key":null,

@@ -1,4 +1,5 @@
 using Network;
+using Network.Chat;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,9 +31,13 @@ public class AuthenticationHandler : Singleton<AuthenticationHandler>
                     GameManager.Instance.playerManager.userId = userProfile.userId;
                     GameManager.Instance.playerManager.playfabId = data;
                     Debug.Log($"IP:{GameNetworkManager.Instance.IP}, PORT:{GameNetworkManager.Instance.port}");
+                    ChatManager.Connect(userProfile.userId);
 
                     GameNetworkManager.Instance.ConnectToServer(GameNetworkManager.Instance.IP, GameNetworkManager.Instance.port);
-                    ChatConsole.Instance.ConnectChat();
+
+                    GameNetworkManager.Instance.connectionStatus.color = ChatManager.connectionColor;
+                    GameNetworkManager.Instance.connectionText.text = ChatManager.connectionStateText;
+                   
                     Debug.Log($"Login Succes!; userId:{userProfile.userId}, playfabId:{data}");
 
                     GetPlayerServer();

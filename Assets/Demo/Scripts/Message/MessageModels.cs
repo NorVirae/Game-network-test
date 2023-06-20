@@ -21,7 +21,7 @@ public class ChatMessage : MessageProxy
     public string channelID;
     public string clientID;
     public string eventName;
-    public ChatModel messageBody;
+    public new ChatModel messageBody;
 }
 
 public class ChatRoomMessage : MessageProxy
@@ -29,5 +29,5 @@ public class ChatRoomMessage : MessageProxy
     public string channelID;
     public string clientID;
     public string eventName;
-    public ChatRoomModel messageBody;
+    public new ChatRoomModel messageBody;
 }

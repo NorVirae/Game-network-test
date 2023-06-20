@@ -1,8 +1,11 @@
 using IO.Ably;
+using IO.Ably.Realtime;
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Network.Chat
 {
@@ -19,17 +22,21 @@ namespace Network.Chat
         public string message;
     }
 
-    public static class ChatManager 
+    public static class ChatManager
     {
         public delegate void OnChatMesasage(ChatMessageResponse chatMessage);
 
         private static AblyRealtime _ably;
         private static ClientOptions _clientOptions;
         private static bool _connected;
-        private static ChatConnectionState connectionState;
+        public static ChatConnectionState connectionState;
+        public static string connectionStateText = "Disconnected";
+        public static Color connectionColor = Color.red;
+
 
         public static event OnChatMesasage OnMesasage;
 
+        //_vRLkA.dtMWdw:vxlwHwwbRD6t_uP8Qu0b5ouI8xd63937moEWiuQhxSo
         public static void Init(string apiKey)
         {
             _clientOptions = new ClientOptions
@@ -45,24 +52,36 @@ namespace Network.Chat
 
                 switch (args.Current)
                 {
-                    case IO.Ably.Realtime.ConnectionState.Initialized:
+                    case ConnectionState.Initialized:
                         break;
-                    case IO.Ably.Realtime.ConnectionState.Connecting:
+                    case ConnectionState.Connecting:
                         connectionState = ChatConnectionState.Connecting;
+                        connectionStateText = "Connecting";
+                        connectionColor = Color.yellow;
+                        Debug.Log(connectionStateText);
                         break;
-                    case IO.Ably.Realtime.ConnectionState.Connected:
+                    case ConnectionState.Connected:
                         connectionState = ChatConnectionState.Connected;
+                        connectionStateText = "Connected";
+                        Debug.Log(connectionStateText);
+
+                        connectionColor = Color.green;
+
                         break;
-                    case IO.Ably.Realtime.ConnectionState.Disconnected:
-                    case IO.Ably.Realtime.ConnectionState.Suspended:
-                    case IO.Ably.Realtime.ConnectionState.Closing:
-                    case IO.Ably.Realtime.ConnectionState.Closed:
-                    case IO.Ably.Realtime.ConnectionState.Failed:
+                    case ConnectionState.Disconnected:
+                    case ConnectionState.Suspended:
+                    case ConnectionState.Closing:
+                    case ConnectionState.Closed:
+                    case ConnectionState.Failed:
                         connectionState = ChatConnectionState.Disconnected;
+                        connectionStateText = "Disconnected";
+                        Debug.Log(connectionStateText);
+
+                        connectionColor = Color.red;
                         break;
                 }
 
-                _connected = args.Current == IO.Ably.Realtime.ConnectionState.Connected;
+                _connected = args.Current == ConnectionState.Connected;
             });
         }
 
@@ -116,7 +135,7 @@ namespace Network.Chat
             return channelNames;
         }
 
-        private static async Task<List<ChatMessageResponse>> LoadChannelMessageHistory(string channelId, string _event)
+        public static async Task<List<ChatMessageResponse>> LoadChannelMessageHistory(string channelId, string _event)
         {
             
             var historyPage = await _ably.Channels.Get(channelId).HistoryAsync();
@@ -142,11 +161,11 @@ namespace Network.Chat
             
         }
 
-        private static async void PublishMessage(ChatMessage message)
+        public static async void PublishMessage(ChatMessage message)
         {
             // async-await makes sure call is executed in the background and then result is posted on UnitySynchronizationContext/Main thread
-            await _ably.Channels.Get(message.channelName).PublishAsync(message.eventName, message.message);
-            
+           Result res = await _ably.Channels.Get(message.channelName).PublishAsync(message.eventName, message.message);
+            Debug.Log(res + "RESULT FROM MESG SEND");
         }
     }
 
