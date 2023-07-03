@@ -1,3 +1,4 @@
+using IO.Ably;
 using IO.Ably.Realtime;
 using Network.Chat;
 using QNetLib;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
+using static Network.PlayfabApiHander;
 
 namespace Network
 {
@@ -19,6 +21,9 @@ namespace Network
         public Image connectionStatus;
         public Text connectionText;
 
+        public Image connectionStatusAuth;
+        public Text connectionTextAuth;
+
 
         public GameObject publicChat;
         public GameObject privateChat;
@@ -27,11 +32,9 @@ namespace Network
         public GameObject privateChatScroll;
 
 
-        public short chatMessageId = 102;
-        public short fetchChatRoomMessageId = 104;
-
-        public InputField chatBox;
+        public InputField chatBox; 
         public InputField publicChatBox;
+
 
         public AllChats allChats;
         public AllChatsPublic allPublicChats;
@@ -39,20 +42,39 @@ namespace Network
         public INetworkEventListener networkEventlistener;
         public MessageHandler messageHandler;
 
+
+
         private void Start()
         {
+            ChatManager.OnMesasage += HandleChatMessage;
             Debug.Log("Called " + ChatManager.connectionColor);
             messageHandler = new MessageHandler();
             ChatManager.Init("_vRLkA.dtMWdw:vxlwHwwbRD6t_uP8Qu0b5ouI8xd63937moEWiuQhxSo");
             connectionStatus.color = ChatManager.connectionColor;
             connectionText.text = ChatManager.connectionStateText;
 
-        }
+            connectionStatusAuth.color = ChatManager.connectionColor;
+            connectionTextAuth.text = ChatManager.connectionStateText;
+
+    }
 
         private void Update()
         {
             connectionStatus.color = ChatManager.connectionColor;
             connectionText.text = ChatManager.connectionStateText;
+
+            connectionStatusAuth.color = ChatManager.connectionColor;
+            connectionTextAuth.text = ChatManager.connectionStateText;
+        }
+
+        private void HandleChatMessage(ChatMessageResponse chatMessage)
+        {
+            // Handle the received chat message here
+            string message = chatMessage.message;
+            string clientId = chatMessage.clientId;
+            LoadPublicChatRoom();
+
+            // Perform any necessary actions with the chat message
         }
 
         public void ConnectToServer()
@@ -67,75 +89,137 @@ namespace Network
             client.Connect(_ip, _port);
         }
 
-        public void PushMessageToServer(short messageId, MessageProxy message, Action<Datagram> callback)
+        public void PushMessageToServer(short messageId, Message messageBody, Action<MessageProxy> callback)
         {
-            messageHandler.SendMessageToServer(messageId, message, callback);
+            messageHandler.SendMessageToServer(messageId, messageBody, callback);
         }
 
         //public void CreateChatRoom()
         
 
-        public void PushMessageToServer()
+        public void SendPrivateChatToFriend(string friendPlayfabId)
         {
             ChatMessage message;
-            ChatModel chatModel = new ChatModel { id = Guid.NewGuid(), msg = chatBox.text, chatroomid = GameManager.Instance.playerManager.currentChatroomid, senderid = GameManager.Instance.playerManager.userId, receiverid = "#2LUP9QJ8P0" };
             message = new ChatMessage
             {
-                channelID = "frank",
-                clientID = "joe",
-                eventName = "chat:message",
-                messageBody = chatModel
+                Content = chatBox.text,
+                ChatRoomId = GameManager.Instance.playerManager.currentChatroomid,
+                SenderPlayfabId = GameManager.Instance.playerManager.playfabId,
+                ReceiverPlayfabId = friendPlayfabId
             };
-            PushMessageToServer(chatMessageId, message, HandleLoadPrivateChatRoom);
+            PushMessageToServer(MessageEvents.CHAT_MESSAGE, message, HandleLoadPrivateChatRoomMessages);
 
             chatBox.text = "";
 
-            LoadPrivateChatRoom();
+            LoadPrivateChatRoom(friendPlayfabId);
         }
 
-        public void LoadPrivateChatRoom()
+        //Send public chat to room
+        public void SendPublicMessageToChatRoom()
+        {
+            ChatManager.SubscribeToChannel(GameManager.Instance.playerManager.currentChatroomid.ToString(), "chat:message");
+            ChatManager.PublishMessage(new Chat.ChatMessage
+            {
+                channelName = GameManager.Instance.playerManager.currentChatroomid.ToString(),
+                eventName = "chat:message",
+                message = publicChatBox.text
+            });
+            Debug.Log(publicChatBox.text + " WAD MESSAGE SENTR");
+            publicChatBox.text = "";
+            LoadPublicChatRoom();
+        }
+
+        public void CreatePublicChatRoom()
+        {
+            ChatRoomMessage message;
+
+
+            message = new ChatRoomMessage
+            {
+                Id = GameManager.Instance.playerManager.currentChatroomid,
+                SenderPlayfabId = GameManager.Instance.playerManager.playfabId,
+                Name = "Zogo Group"
+            };
+
+            PushMessageToServer(MessageEvents.JOIN_PUBLIC_CHAT, message, ChatMessageHandlers.HandleCreatePublicChatRoom);
+
+        }
+
+        public void JoinPublicChatRoom()
+        {
+            ChatRoomMessage message = new ChatRoomMessage
+            {
+                Id = GameManager.Instance.playerManager.currentChatroomid,
+                SenderPlayfabId = GameManager.Instance.playerManager.playfabId,
+                Name = "Zogo Group",
+            };
+
+            PushMessageToServer(MessageEvents.JOIN_PUBLIC_CHAT, message, ChatMessageHandlers.HandleJoinPublicChatRoom);
+
+        }
+
+        public void AcceptPlayfabFriend( string playFabId)
+        {
+            FriendRequestMessage message = new FriendRequestMessage { PlayfabId = playFabId};
+            PushMessageToServer(MessageEvents.PLAYFAB_ACCEPT_FRIEND, message, HandleAcceptPlayfabFriend);
+        }
+
+
+
+        
+
+        public void SendPlayfabFriendRequest(string playfabId)
+        {
+            FriendRequestMessage message;
+            message = new FriendRequestMessage
+            {
+                PlayfabId = playfabId
+            };
+            Debug.Log(message + playfabId + " IDS");
+            PushMessageToServer(MessageEvents.PLAYFAB_ADD_FRIEND, message, ChatMessageHandlers.HandleSendPlayfabFriendRequest);
+        }
+
+        public void LoadPrivateChatRoom(string playfabId)
         {
             privateChat.SetActive(true);
             publicChat.SetActive(false);
 
             privateChatScroll.SetActive(true);
             publicChatScroll.SetActive(false);
+
             ChatRoomMessage message;
-            //Debug.Log(GameManager.Instance.playerManager.playfabId + " CREATOR " + GameManager.Instance.playerManager.currentChatroomid);
-            ChatRoomModel chatRoomModel = new ChatRoomModel()
-            {
-                id = GameManager.Instance.playerManager.currentChatroomid,
-                creatorid = GameManager.Instance.playerManager.userId,
-                title = "Aisha"
-            };
+            //Debug.Log(GameManager.Instance.playerManager.playfabId + " CREATOR " + GameManager.Instance.playerManager.currentChatroomid
+
             message = new ChatRoomMessage
             {
-                channelID = "frank",
-                clientID = "joe",
-                eventName = "chat:message",
-                messageBody = chatRoomModel
+                Id = GameManager.Instance.playerManager.currentChatroomid,
+                SenderPlayfabId = GameManager.Instance.playerManager.playfabId,
+                ReceiverPlayfabId = playfabId,
+
+                Name = "Aisha"
             };
 
-            PushMessageToServer(fetchChatRoomMessageId, message, HandleLoadPrivateChatRoom);
+            PushMessageToServer(MessageEvents.FETCH_CHATS_MESSAGES, message, HandleLoadPrivateChatRoomMessages);
 
         }
 
-        private void HandleLoadPrivateChatRoom(Datagram result)
+        public void HandleLoadPrivateChatRoomMessages(MessageProxy result)
         {
 
-            Debug.Log("RESULT FROM MSG CALL "+result);
-            ChatRoomBaseModelMessages data = SerializationHelper.Deserialize<ChatRoomBaseModelMessages>(result.body.ToString());
-            Debug.Log("COUNT " + data.messageBody.chats.Count);
+            Debug.Log("RESULT FROM MSG CALL " + result);
+            ChatRoomMessage data = SerializationHelper.Deserialize<ChatRoomMessage>(result.messageBody.ToString());
+            Debug.Log("RESULT FROM MSG CALL " + data.Name + " " + data.Id + " whola "+ data.Chats.Count);
+
 
             allChats.ClearPreviousChats();
 
-            if (data.messageBody.chats.Count > 0)
+            if (data.Chats.Count > 0)
             {
-                for (int i = 0; i < data.messageBody.chats.Count; i++)
+                for (int i = 0; i < data.Chats.Count; i++)
                 {
-                    allChats.chats.Add(data.messageBody.chats[i]);
-                    
-                    Debug.Log(data.messageBody.chats + "data.chats");
+                    allChats.chats.Add(data.Chats[i]);
+
+                    Debug.Log(data.Chats + "data.chats");
                 }
                 allChats.SpawnChats();
             }
@@ -170,30 +254,45 @@ namespace Network
             }
         }
 
-        
-        public void SendPublicMessage()
+        //Get friendRequest List
+
+        public void GetFriendRequestList()
         {
-            ChatManager.SubscribeToChannel(GameManager.Instance.playerManager.currentChatroomid.ToString(), "chat:message");
-            ChatManager.PublishMessage(new Chat.ChatMessage {
-                channelName =  GameManager.Instance.playerManager.currentChatroomid.ToString(),
-                eventName=  "chat:message",
-                message = publicChatBox.text 
-            });
-            Debug.Log(publicChatBox.text + " WAD MESSAGE SENTR");
-            publicChatBox.text = "";
-            LoadPublicChatRoom();
+            PlayfabApiHander.GetFriendRequestList(GameManager.Instance.playerManager.playfabId, GetFriendRequestListSuccess, new string[] { "FRIEND_REQUEST" });
         }
 
-        //{"type":4,
-       // "key":null,
-       // "body":
-        //"{\"messageID\":102,
-       // \"messageBody\":
-           // {\"channelID\":\"0d494496-0329-4d3b-8fcc-8c9628a11fe6\",
-        //\"chats\":[],
-       // \"eventName\":\"chat:message\",\"messageBody\":{\"id\":\"0d494496-0329-4d3b-8fcc-8c9628a11fe6\",\"title\":\"Aisha\",\"topic\":null,\"description\":null,\"creatorid\":\"#2LUP9QJ8P0\",\"CreatedAt\":0.0,\"UpdatedAt\":0.0}}}","clientCallabckId":1}
+       private void GetFriendRequestListSuccess(bool success, Dictionary<string, string> resultData)
+        {
 
-    public void Disconnect()
+            
+            if (success)
+            {
+                try
+                {
+                    Dictionary<string, FriendRequestMessage> friendRequestObject = SerializationHelper.Deserialize<Dictionary<string, FriendRequestMessage>>(resultData["FRIEND_REQUEST"]);
+
+
+                    foreach (KeyValuePair<string, FriendRequestMessage> kvp in friendRequestObject)
+                    {
+                        Debug.Log(kvp.Key + ": " + kvp.Value);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.Log(e.Message + " YOU Do not have any friends yet");
+                }
+                
+            }
+        }
+
+        // Handlers
+        public void HandleAcceptPlayfabFriend(MessageProxy message)
+        {
+
+        }
+
+
+        public void Disconnect()
         {
             client?.Disconnect();
         }

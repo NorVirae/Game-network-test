@@ -10,6 +10,8 @@ public class AllChatsPublic : MonoBehaviour
 {
     public PublicSenderChat publicSenderChat;
     public PublicReceiverChat publicReceiverChat;
+    private bool isLoaded = false;
+
     public List<ChatMessageResponse> chats = new List<ChatMessageResponse>();
     // Start is called before the first frame update
     void Start()
@@ -18,8 +20,16 @@ public class AllChatsPublic : MonoBehaviour
 
         Debug.Log(chats.Count + " COUNTS");
 
-        SpawnChats();
 
+    }
+
+    private void Update()
+    {
+        if (!isLoaded)
+        {
+            SpawnChats();
+
+        }
     }
 
     private void InnitializeList()
@@ -46,9 +56,9 @@ public class AllChatsPublic : MonoBehaviour
 
         for (int i = 0; i < chats.Count; i++)
         {
-            if (i / 2 == 0)
+            if (chats[i].clientId == GameManager.Instance.playerManager.playfabId)
             {
-                publicSenderChat.UpdateChat(chats[i].clientId,chats[i].message);
+                publicSenderChat.UpdateChat("You",chats[i].message);
                 Instantiate(publicSenderChat, this.transform, false);
             }
             else
@@ -58,5 +68,6 @@ public class AllChatsPublic : MonoBehaviour
             }
 
         }
+        isLoaded = true;
     }
 }

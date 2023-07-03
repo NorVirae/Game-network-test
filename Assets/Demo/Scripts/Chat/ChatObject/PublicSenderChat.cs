@@ -9,11 +9,16 @@ public class PublicSenderChat : MonoBehaviour
 {
     public ChatMessageResponse response;
     public Text senderText;
-
+    public Text SenderId;
     public void UpdateChat(string clientId, string message)
     {
-        response.clientId = clientId;
-        response.message = message;
-        senderText.text = message;
+        if (string.IsNullOrEmpty(clientId) && string.IsNullOrEmpty(message))
+        {
+            response.clientId = clientId;
+            response.message = message;
+            senderText.text = message;
+            SenderId.text = clientId;
+        }
+        
     }
 }

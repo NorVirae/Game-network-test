@@ -11,28 +11,51 @@ namespace Network
 {
     public class PlayfabApiHander 
     {
-        
-        private static void UpdateTitleID()
+       public enum FriendIdType { PlayFabId, Username, Email, DisplayName };
+        private static void UpdateTitleID(string titleId)
         {
             if(string.IsNullOrEmpty(PlayFabSettings.staticSettings.TitleId))
             {
-                throw new Exception("Playfab title settings cannot be null! Please update the title Id in settings");
+                PlayFabSettings.staticSettings.TitleId = titleId;
             }
         }
 
-        public static void LoginWithCustomId(string Id, Action<bool, string> callabck)
+        private static void UpdateDisplayName(string displayName)
         {
-            var request = new LoginWithCustomIDRequest { CustomId = Id, CreateAccount = true};
-            PlayFabClientAPI.LoginWithCustomID(request, 
+            PlayFabClientAPI.UpdateUserTitleDisplayName(new UpdateUserTitleDisplayNameRequest
+            {
+
+                DisplayName = displayName
+            }, result => {
+                Debug.Log("The player's display name is now: " + result.DisplayName);
+            }, error => Debug.LogError(error.GenerateErrorReport()));
+        }
+        public static void LoginWithCustomId(string Id, string titleId, string displayName, Action<bool, string> callabck)
+        {
+            Debug.Log(titleId + " TITLE ID " + PlayFabSettings.staticSettings.TitleId);
+
+            UpdateTitleID(titleId);
+            var request = new LoginWithCustomIDRequest { CustomId = Id, CreateAccount = true };
+            PlayFabClientAPI.LoginWithCustomID(request,
                 (LoginResult result) =>
                 {
-                    callabck?.Invoke(true,result.PlayFabId);
+                    Debug.Log(result.ToString() + " ID");
+                    UpdateDisplayName(displayName);
+                    callabck?.Invoke(true, result.PlayFabId);
                 },
                 (PlayFabError error) =>
                 {
                     callabck?.Invoke(false, error.ErrorMessage);
                 }
             );
+
+            Debug.Log(titleId + " TITLE ID " + PlayFabSettings.staticSettings.TitleId);
+
+        }
+
+        public static void GetFriendRequestList(string playfabId, Action<bool, Dictionary<string, string>> callback, params string[] key)
+        {
+            GetPlayerPublicData(playfabId, callback, key);
         }
 
         public static void GetPlayerPublicData(string playfabId, Action<bool, Dictionary<string, string>> callback, params string[] key)

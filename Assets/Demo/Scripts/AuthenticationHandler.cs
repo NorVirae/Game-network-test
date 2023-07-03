@@ -4,11 +4,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class AuthenticationHandler : Singleton<AuthenticationHandler>
 {
     public UserProfileCatch userProfile;
+    public NetworkSettings networkSettings;
+
     public PlayerManager playerManager;
+
+    public InputField userName;
+
     //public GameObject playfabUILogin;
     //public GameObject gameServerLogin;
 
@@ -19,19 +25,20 @@ public class AuthenticationHandler : Singleton<AuthenticationHandler>
     {
         try
         {
-            if(string.IsNullOrEmpty(userProfile.userId))
+
+            if (string.IsNullOrEmpty(userProfile.userId))
             {
                 userProfile.userId = HashtagFromId.Generate(Guid.NewGuid().ToString());
             }
 
-            PlayfabApiHander.LoginWithCustomId(userProfile.userId, (succes, data) =>
+            PlayfabApiHander.LoginWithCustomId(userProfile.userId, networkSettings.titleID, userName.text, (succes, data) =>
             {
                 if(succes)
                 {
                     GameManager.Instance.playerManager.userId = userProfile.userId;
                     GameManager.Instance.playerManager.playfabId = data;
                     Debug.Log($"IP:{GameNetworkManager.Instance.IP}, PORT:{GameNetworkManager.Instance.port}");
-                    ChatManager.Connect(userProfile.userId);
+                    ChatManager.Connect(data);
 
                     GameNetworkManager.Instance.ConnectToServer(GameNetworkManager.Instance.IP, GameNetworkManager.Instance.port);
 
@@ -52,6 +59,19 @@ public class AuthenticationHandler : Singleton<AuthenticationHandler>
         {
             Debug.LogError(e);
         }
+    }
+
+   
+    //this function fetches pending friendrequest
+    public void FetchPendingFriendRequestsList(string playfabId)
+    {
+        PlayfabApiHander.GetFriendRequestList(playfabId, FetchPendingFriendsRequestListSuccess, "FRIEND_REQUEST");
+    }
+
+    //handle actions requiring FriendsRequestList
+    public static void FetchPendingFriendsRequestListSuccess(bool success, Dictionary<string, string> friendRequestList)
+    {
+
     }
 
     public void LoginWithGoogle()

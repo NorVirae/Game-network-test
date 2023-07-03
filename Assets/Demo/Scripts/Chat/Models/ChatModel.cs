@@ -5,10 +5,11 @@ using UnityEngine;
 
 public class ChatModel
 {
-    public Guid id { get; set; }
-    public string senderid { get; set; }
-    public string receiverid { get; set; }
-    public string msg { get; set; }
-    public Guid chatroomid { get; set; }
+    public Guid Id { get; set; }
+    public string SenderPlayfabId { get; set; }
+    public string ReceiverPlayfabId { get; set; }
+    public string Content { get; set; }
+    public Guid ChatRoomId { get; set; }
+    public string MediaUrl { get; set; }
 
 }

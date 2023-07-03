@@ -11,6 +11,8 @@ namespace Network
         }
     }
 
+
+
     public class MessageProxy
     {
         public short messageID;

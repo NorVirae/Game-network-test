@@ -9,10 +9,12 @@ public class PublicReceiverChat : MonoBehaviour
 {
     public ChatMessageResponse response;
     public Text receiverText;
+    public Text receiverId;
     public void UpdateChat(string clientId, string message)
     {
         response.clientId = clientId;
         response.message = message;
         receiverText.text = message;
+        receiverId.text = clientId;
     }
 }

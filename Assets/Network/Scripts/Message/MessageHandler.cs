@@ -11,13 +11,13 @@ namespace Network
     {
 
         public MessageHandler() {
-            actionQueueUpdateFunc = new Dictionary<int, Action<Datagram>>();
+            actionQueueUpdateFunc = new Dictionary<int, Action<MessageProxy>>();
             RegisterHandlers();
         }
 
 
-        private Dictionary<int, System.Action<Datagram>> actionQueueUpdateFunc = new Dictionary<int, System.Action<Datagram>>();
-        private Dictionary<short, System.Action<Datagram, Action<Datagram>>> _handlers = new Dictionary<short, System.Action<Datagram, Action<Datagram>>>();
+        private Dictionary<int, Action<MessageProxy>> actionQueueUpdateFunc = new Dictionary<int, Action<MessageProxy>>();
+        private Dictionary<short, Action<Datagram, Action<MessageProxy>>> _handlers = new Dictionary<short, Action<Datagram, Action<MessageProxy>>>();
 
         private int actionCount = 0;
 
@@ -31,7 +31,6 @@ namespace Network
                 Debug.Log(proxy.messageID + " WHATEVER");
                 Debug.Log(JsonUtility.ToJson(datagram) + "DATAGRAM");
 
-
                 //actionQueueUpdateFunc[index]?.Invoke(proxy);
                 _handlers[proxy.messageID]?.Invoke(datagram, actionQueueUpdateFunc[index]);
             }
@@ -42,12 +41,12 @@ namespace Network
             }
         }
 
-        internal void SendMessageToServer(short messageId, object message, Action<Datagram> callabck)
+        internal void SendMessageToServer(short messageId, object messageBody, Action<MessageProxy> callabck)
         {
             MessageProxy messageProxy = new()
             {
                 messageID = messageId,
-                messageBody = message,
+                messageBody = messageBody,
             };
             int id = actionCount++;
             Debug.Log("MAIN ID ADDED " + id);
@@ -58,21 +57,46 @@ namespace Network
 
         internal void RegisterHandlers()
         {
-            _handlers.Add(MessageEvents.FETCH_CHATS_MESSAGES, handlePrivateMessage);
-            _handlers.Add(MessageEvents.LOGIN_MESSAGE, handlePrivateMessage);
-            _handlers.Add(MessageEvents.CHAT_MESSAGE, handlePrivateMessage);
-            _handlers.Add(MessageEvents.FETCH_CHAT_ROOMS, handlePrivateMessage);
-
-
+            _handlers.Add(MessageEvents.FETCH_CHATS_MESSAGES, handleChatMessage);
+            _handlers.Add(MessageEvents.LOGIN_MESSAGE, handleLoginMessage);
+            _handlers.Add(MessageEvents.CHAT_MESSAGE, handleChatMessage);
+            _handlers.Add(MessageEvents.FETCH_CHAT_ROOMS, handleFetchChatRooms);
+            _handlers.Add(MessageEvents.PLAYFAB_ADD_FRIEND, handleAddFriendMessage);
+            _handlers.Add(MessageEvents.JOIN_PUBLIC_CHAT, handleAddFriendMessage);
 
         }
 
-        internal void handlePrivateMessage(Datagram datagram, Action<Datagram> callback)
+
+        internal void handleLoginMessage(Datagram datagram, Action<MessageProxy> callback)
         {
-            ChatRoomMessage proxy = SerializationHelper.Deserialize<ChatRoomMessage>(datagram.body.ToString());
-            Console.WriteLine(proxy.channelID + " CHANNEL  ID");
-            callback.Invoke(datagram);
+            MessageProxy proxy = SerializationHelper.Deserialize<MessageProxy>(datagram.body.ToString());
+            callback.Invoke(proxy);
         }
+
+        internal void handleChatMessage(Datagram datagram, Action<MessageProxy> callback)
+        {
+            MessageProxy proxy = SerializationHelper.Deserialize<MessageProxy>(datagram.body.ToString());
+            callback.Invoke(proxy);
+        }
+
+        internal void handleFetchChatMessage(Datagram datagram, Action<MessageProxy> callback)
+        {
+            MessageProxy proxy = SerializationHelper.Deserialize<MessageProxy>(datagram.body.ToString());
+            callback.Invoke(proxy);
+        }
+
+        internal void handleFetchChatRooms(Datagram datagram, Action<MessageProxy> callback)
+        {
+            MessageProxy proxy = SerializationHelper.Deserialize<MessageProxy>(datagram.body.ToString());
+            callback.Invoke(proxy);
+        }
+
+        internal void handleAddFriendMessage(Datagram datagram, Action<MessageProxy> callback)
+        {
+            MessageProxy proxy = SerializationHelper.Deserialize<MessageProxy>(datagram.body.ToString());
+            callback.Invoke(proxy);
+        }
+
         internal void SendDataToServerInternal(EventType type, object message, int id = -1)
         {
             Datagram datagram = new Datagram(type, message, id);

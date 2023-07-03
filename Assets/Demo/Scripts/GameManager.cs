@@ -6,14 +6,15 @@ using UnityEngine;
 public class GameManager : Network.Singleton<GameManager> , INetworkEventListener
 {
     public PlayerManager playerManager;
+    public GameObject chatContainer;
+    public GameObject authContainer;
+
 
     public void Start()
     {
         GameNetworkManager.Instance.networkEventlistener = this;
         playerManager = new PlayerManager();
     }
-
-
 
 
     public void EnterGameServer()
@@ -33,13 +34,19 @@ public class GameManager : Network.Singleton<GameManager> , INetworkEventListene
 
 
         LoginMessage loginMessage = new LoginMessage();
-        loginMessage.playfabId = playerManager.playfabId;
-        loginMessage.userId = playerManager.userId;
+        loginMessage.PlayfabId = playerManager.playfabId;
+        loginMessage.UserId = playerManager.userId;
 
         GameNetworkManager.Instance.PushMessageToServer(MessageEvents.LOGIN_MESSAGE, loginMessage, (data) =>
         {
             Debug.Log("Message Response; " + data.ToString());
         });
+    }
+
+    public void NavigateToChat()
+    {
+        chatContainer.SetActive(true);
+        authContainer.SetActive(false);
     }
 
     public void OnDisconnected()
