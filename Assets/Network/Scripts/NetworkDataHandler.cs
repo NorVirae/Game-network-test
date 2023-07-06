@@ -18,8 +18,6 @@ namespace Network
             switch (type)
             {
                 case EventType.Connection:
-                    Debug.Log(type);
-                    Debug.Log(SerializationHelper.Serialize(datagram.body));
                     GameNetworkManager.Instance.OnConnected();
                     break;
                 case EventType.Ping:

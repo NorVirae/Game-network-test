@@ -49,7 +49,6 @@ namespace Network
                 messageBody = messageBody,
             };
             int id = actionCount++;
-            Debug.Log("MAIN ID ADDED " + id);
             actionQueueUpdateFunc.Add(id, callabck);
 
             SendDataToServerInternal(EventType.Message, messageProxy, id);
@@ -57,15 +56,14 @@ namespace Network
 
         internal void RegisterHandlers()
         {
+            _handlers.Add(MessageEvents.SYSTEM_MESSAGE, handleChatMessage);
             _handlers.Add(MessageEvents.FETCH_CHATS_MESSAGES, handleChatMessage);
             _handlers.Add(MessageEvents.LOGIN_MESSAGE, handleLoginMessage);
             _handlers.Add(MessageEvents.CHAT_MESSAGE, handleChatMessage);
             _handlers.Add(MessageEvents.FETCH_CHAT_ROOMS, handleFetchChatRooms);
             _handlers.Add(MessageEvents.PLAYFAB_ADD_FRIEND, handleAddFriendMessage);
             _handlers.Add(MessageEvents.JOIN_PUBLIC_CHAT, handleAddFriendMessage);
-
         }
-
 
         internal void handleLoginMessage(Datagram datagram, Action<MessageProxy> callback)
         {

@@ -12,13 +12,11 @@ public class PublicSenderChat : MonoBehaviour
     public Text SenderId;
     public void UpdateChat(string clientId, string message)
     {
-        if (string.IsNullOrEmpty(clientId) && string.IsNullOrEmpty(message))
-        {
+       
             response.clientId = clientId;
             response.message = message;
             senderText.text = message;
             SenderId.text = clientId;
-        }
         
     }
 }

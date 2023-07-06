@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class AllChats : MonoBehaviour
 {
@@ -14,10 +15,6 @@ public class AllChats : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        InnitializeList();
-
-        Debug.Log(chats.Count + " COUNTS");
-
 
     }
 
@@ -25,8 +22,9 @@ public class AllChats : MonoBehaviour
     {
         if (!isLoaded)
         {
-            SpawnChats();
-
+            Debug.Log("FRIM UPDATE");
+            InnitializeList();
+            isLoaded = true;
         }
     }
     private void InnitializeList()
@@ -89,6 +87,8 @@ public class AllChats : MonoBehaviour
             Content = "hello dear!",
             ChatRoomId = Guid.NewGuid()
         });
+        SpawnChats();
+
     }
 
     public void ClearPreviousChats()
@@ -100,27 +100,50 @@ public class AllChats : MonoBehaviour
         }
     }
 
+    public void SpawnSingleChat(ChatModel chat)
+    {
+        chats.Add(chat);
+
+        if (chat.SenderPlayfabId == GameManager.Instance.playerManager.playfabId)
+        {
+            Debug.Log(" YOU");
+            SenderChat item = Instantiate(senderChat, this.transform).GetComponent<SenderChat>();
+            item.UpdateChat(chat.Content, chat.SenderPlayfabId, chat.ReceiverPlayfabId, chat.ChatRoomId);
+
+        }
+        else
+        {
+            Debug.Log("THE OTHER");
+            ReceiverChat item = Instantiate(receiverChat, this.transform).GetComponent<ReceiverChat>();
+            item.UpdateChat(chat.Content, chat.SenderPlayfabId, chat.ReceiverPlayfabId, chat.ChatRoomId);
+
+        }
+
+    }
+
     public void SpawnChats()
     {
-
         
-
+        Debug.Log("SPAWN CHATS CALLED");
         for (int i = 0; i < chats.Count; i++)
         {
             if (chats[i].SenderPlayfabId == GameManager.Instance.playerManager.playfabId)
             {
-                senderChat.UpdateChat(chats[i].Content, chats[i].SenderPlayfabId, chats[i].ReceiverPlayfabId, chats[i].ChatRoomId);
-                Instantiate(senderChat, this.transform, false);
+                Debug.Log(" YOU");
+                SenderChat item = Instantiate(senderChat, this.transform).GetComponent<SenderChat>();
+                item.UpdateChat(chats[i].Content, chats[i].SenderPlayfabId, chats[i].ReceiverPlayfabId, chats[i].ChatRoomId);
+
             }
             else
             {
-                receiverChat.UpdateChat(chats[i].Content, chats[i].SenderPlayfabId, chats[i].ReceiverPlayfabId, chats[i].ChatRoomId);
-                Instantiate(receiverChat, this.transform, false);
+                Debug.Log("THE OTHER");
+                ReceiverChat item = Instantiate(receiverChat, this.transform).GetComponent<ReceiverChat>();
+                item.UpdateChat(chats[i].Content, chats[i].SenderPlayfabId, chats[i].ReceiverPlayfabId, chats[i].ChatRoomId);
+
             }
 
         }
 
-        isLoaded = true;
     }
 
 }

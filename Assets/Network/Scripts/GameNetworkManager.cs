@@ -28,8 +28,8 @@ namespace Network
         public GameObject publicChat;
         public GameObject privateChat;
 
-        public GameObject publicChatScroll;
-        public GameObject privateChatScroll;
+        public GameObject publicChatInput;
+        public GameObject privateChatInput;
 
 
         public InputField chatBox; 
@@ -47,7 +47,6 @@ namespace Network
         private void Start()
         {
             ChatManager.OnMesasage += HandleChatMessage;
-            Debug.Log("Called " + ChatManager.connectionColor);
             messageHandler = new MessageHandler();
             ChatManager.Init("_vRLkA.dtMWdw:vxlwHwwbRD6t_uP8Qu0b5ouI8xd63937moEWiuQhxSo");
             connectionStatus.color = ChatManager.connectionColor;
@@ -56,7 +55,13 @@ namespace Network
             connectionStatusAuth.color = ChatManager.connectionColor;
             connectionTextAuth.text = ChatManager.connectionStateText;
 
-    }
+            //privateChat.SetActive(false);
+            //publicChat.SetActive(true);
+
+           //privateChatScroll.SetActive(false);
+            //publicChatScroll.SetActive(true);
+
+        }
 
         private void Update()
         {
@@ -74,6 +79,8 @@ namespace Network
             string clientId = chatMessage.clientId;
             LoadPublicChatRoom();
 
+            //allPublicChats.SpawnSingleChat(chatMessage);
+            Debug.Log("Spawned chat");
             // Perform any necessary actions with the chat message
         }
 
@@ -99,19 +106,24 @@ namespace Network
 
         public void SendPrivateChatToFriend(string friendPlayfabId)
         {
-            ChatMessage message;
-            message = new ChatMessage
+            if (!string.IsNullOrEmpty(chatBox.text))
             {
-                Content = chatBox.text,
-                ChatRoomId = GameManager.Instance.playerManager.currentChatroomid,
-                SenderPlayfabId = GameManager.Instance.playerManager.playfabId,
-                ReceiverPlayfabId = friendPlayfabId
-            };
-            PushMessageToServer(MessageEvents.CHAT_MESSAGE, message, HandleLoadPrivateChatRoomMessages);
+                Debug.Log("Its not empty");
+                ChatMessage message;
+                message = new ChatMessage
+                {
+                    Content = chatBox.text,
+                    ChatRoomId = GameManager.Instance.playerManager.currentChatroomid,
+                    SenderPlayfabId = GameManager.Instance.playerManager.playfabId,
+                    ReceiverPlayfabId = friendPlayfabId
+                };
+                PushMessageToServer(MessageEvents.CHAT_MESSAGE, message, HandleLoadPrivateChatRoomMessages);
 
-            chatBox.text = "";
+                chatBox.text = "";
 
-            LoadPrivateChatRoom(friendPlayfabId);
+                LoadPrivateChatRoom(friendPlayfabId);
+            }
+            
         }
 
         //Send public chat to room
@@ -161,12 +173,20 @@ namespace Network
         public void AcceptPlayfabFriend( string playFabId)
         {
             FriendRequestMessage message = new FriendRequestMessage { PlayfabId = playFabId};
-            PushMessageToServer(MessageEvents.PLAYFAB_ACCEPT_FRIEND, message, HandleAcceptPlayfabFriend);
+            AddFriend(FriendIdType.PlayFabId, playFabId, (success) =>
+            {
+                if (success)
+                {
+                    PushMessageToServer(MessageEvents.PLAYFAB_ACCEPT_FRIEND, message, HandleAcceptPlayfabFriend);
+                    Debug.Log("user was added successfully");
+                }
+                else
+                {
+                    Debug.Log("Unable to accept friend request");
+                }
+            });
+            
         }
-
-
-
-        
 
         public void SendPlayfabFriendRequest(string playfabId)
         {
@@ -176,7 +196,19 @@ namespace Network
                 PlayfabId = playfabId
             };
             Debug.Log(message + playfabId + " IDS");
-            PushMessageToServer(MessageEvents.PLAYFAB_ADD_FRIEND, message, ChatMessageHandlers.HandleSendPlayfabFriendRequest);
+            AddFriend(FriendIdType.PlayFabId, playfabId, (success) =>
+            {
+                if (success)
+                {
+                    PushMessageToServer(MessageEvents.PLAYFAB_ADD_FRIEND, message, ChatMessageHandlers.HandleSendPlayfabFriendRequest);
+                    Debug.Log("user was added successfully");
+                }
+                else
+                {
+                    Debug.Log("Unable to add friend");
+                }
+            });
+           
         }
 
         public void LoadPrivateChatRoom(string playfabId)
@@ -184,8 +216,8 @@ namespace Network
             privateChat.SetActive(true);
             publicChat.SetActive(false);
 
-            privateChatScroll.SetActive(true);
-            publicChatScroll.SetActive(false);
+            privateChatInput.SetActive(true);
+            publicChatInput.SetActive(false);
 
             ChatRoomMessage message;
             //Debug.Log(GameManager.Instance.playerManager.playfabId + " CREATOR " + GameManager.Instance.playerManager.currentChatroomid
@@ -199,6 +231,8 @@ namespace Network
                 Name = "Aisha"
             };
 
+            Debug.Log("Load Private called! ");
+
             PushMessageToServer(MessageEvents.FETCH_CHATS_MESSAGES, message, HandleLoadPrivateChatRoomMessages);
 
         }
@@ -206,11 +240,9 @@ namespace Network
         public void HandleLoadPrivateChatRoomMessages(MessageProxy result)
         {
 
-            Debug.Log("RESULT FROM MSG CALL " + result);
+            Debug.Log("RESULT FROM MSG CALL " + result + JsonHelper.Serialize(result));
             ChatRoomMessage data = SerializationHelper.Deserialize<ChatRoomMessage>(result.messageBody.ToString());
             Debug.Log("RESULT FROM MSG CALL " + data.Name + " " + data.Id + " whola "+ data.Chats.Count);
-
-
             allChats.ClearPreviousChats();
 
             if (data.Chats.Count > 0)
@@ -219,7 +251,7 @@ namespace Network
                 {
                     allChats.chats.Add(data.Chats[i]);
 
-                    Debug.Log(data.Chats + "data.chats");
+                    Debug.Log(JsonHelper.Serialize(data.Chats[i]) + "data.chats");
                 }
                 allChats.SpawnChats();
             }
@@ -230,8 +262,8 @@ namespace Network
             privateChat.SetActive(false);
             publicChat.SetActive(true);
 
-            privateChatScroll.SetActive(false);
-            publicChatScroll.SetActive(true);
+            privateChatInput.SetActive(false);
+            publicChatInput.SetActive(true);
 
             //load messages from ably history async
 
@@ -258,7 +290,7 @@ namespace Network
 
         public void GetFriendRequestList()
         {
-            PlayfabApiHander.GetFriendRequestList(GameManager.Instance.playerManager.playfabId, GetFriendRequestListSuccess, new string[] { "FRIEND_REQUEST" });
+            PlayfabApiHander.GetFriendRequestList(GameManager.Instance.playerManager.playfabId, GetFriendRequestListSuccess, new string[] { "Friends" });
         }
 
        private void GetFriendRequestListSuccess(bool success, Dictionary<string, string> resultData)
@@ -269,7 +301,7 @@ namespace Network
             {
                 try
                 {
-                    Dictionary<string, FriendRequestMessage> friendRequestObject = SerializationHelper.Deserialize<Dictionary<string, FriendRequestMessage>>(resultData["FRIEND_REQUEST"]);
+                    Dictionary<string, FriendRequestMessage> friendRequestObject = SerializationHelper.Deserialize<Dictionary<string, FriendRequestMessage>>(resultData["Friends"]);
 
 
                     foreach (KeyValuePair<string, FriendRequestMessage> kvp in friendRequestObject)
@@ -310,7 +342,6 @@ namespace Network
 
         internal void OnConnected()
         {
-            Debug.Log("Was connected");
             networkEventlistener.OnConnected();
         }
 

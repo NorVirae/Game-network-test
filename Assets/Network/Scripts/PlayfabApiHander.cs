@@ -6,6 +6,7 @@ using System;
 using PlayFab.ClientModels;
 using System.Linq;
 using ENet;
+using UnityEditor.PackageManager;
 
 namespace Network
 {
@@ -20,6 +21,42 @@ namespace Network
             }
         }
 
+        public static async void AddFriend(FriendIdType idType, string friendId, Action<bool> callback)
+        {
+            var request = new AddFriendRequest();
+            switch (idType)
+            {
+                case FriendIdType.PlayFabId:
+                    request.FriendPlayFabId = friendId;
+                    break;
+                case FriendIdType.Username:
+                    request.FriendUsername = friendId;
+                    break;
+                case FriendIdType.Email:
+                    request.FriendEmail = friendId;
+                    break;
+                case FriendIdType.DisplayName:
+                    request.FriendTitleDisplayName = friendId;
+                    break;
+            }
+            // Execute request and update friends when we are done
+          PlayFabClientAPI.AddFriend(request, result => {
+                Debug.Log("Friend added successfully!");
+               callback?.Invoke(true);
+            }, (PlayFabError error) =>
+            {
+                callback?.Invoke(false);
+                
+            });
+
+        }
+
+        private static void DisplayPlayFabError(PlayFabError error)
+        {
+            Debug.Log(error.ErrorMessage);
+        }
+
+
         private static void UpdateDisplayName(string displayName)
         {
             PlayFabClientAPI.UpdateUserTitleDisplayName(new UpdateUserTitleDisplayNameRequest
@@ -30,9 +67,9 @@ namespace Network
                 Debug.Log("The player's display name is now: " + result.DisplayName);
             }, error => Debug.LogError(error.GenerateErrorReport()));
         }
+
         public static void LoginWithCustomId(string Id, string titleId, string displayName, Action<bool, string> callabck)
         {
-            Debug.Log(titleId + " TITLE ID " + PlayFabSettings.staticSettings.TitleId);
 
             UpdateTitleID(titleId);
             var request = new LoginWithCustomIDRequest { CustomId = Id, CreateAccount = true };

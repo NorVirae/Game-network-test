@@ -13,14 +13,11 @@ public class AllChatsPublic : MonoBehaviour
     private bool isLoaded = false;
 
     public List<ChatMessageResponse> chats = new List<ChatMessageResponse>();
+    public List<GameObject> chatsPrefabObjects = new List<GameObject>();
     // Start is called before the first frame update
     void Start()
     {
         InnitializeList();
-
-        Debug.Log(chats.Count + " COUNTS");
-
-
     }
 
     private void Update()
@@ -51,6 +48,23 @@ public class AllChatsPublic : MonoBehaviour
         }
     }
 
+    public void SpawnSingleChat(ChatMessageResponse chat)
+    {
+        chats.Add(chat);
+
+        if (chat.clientId == GameManager.Instance.playerManager.playfabId)
+        {
+            PublicSenderChat item = Instantiate(publicSenderChat, this.transform).GetComponent<PublicSenderChat>();
+            item.UpdateChat("You", chat.message);
+        }
+        else
+        {
+            PublicReceiverChat item = Instantiate(publicReceiverChat, this.transform).GetComponent<PublicReceiverChat>();
+            item.UpdateChat(chat.clientId, chat.message);
+        }
+
+    }
+
     public void SpawnChats()
     {
 
@@ -58,13 +72,13 @@ public class AllChatsPublic : MonoBehaviour
         {
             if (chats[i].clientId == GameManager.Instance.playerManager.playfabId)
             {
-                publicSenderChat.UpdateChat("You",chats[i].message);
-                Instantiate(publicSenderChat, this.transform, false);
+                PublicSenderChat item = Instantiate(publicSenderChat, this.transform);
+                item.UpdateChat("You", chats[i].message);
             }
             else
             {
-                publicReceiverChat.UpdateChat(chats[i].clientId,chats[i].message);
-                Instantiate(publicReceiverChat, this.transform, false);
+                PublicReceiverChat item = Instantiate(publicReceiverChat, this.transform);
+                item.UpdateChat(chats[i].clientId, chats[i].message);
             }
 
         }
